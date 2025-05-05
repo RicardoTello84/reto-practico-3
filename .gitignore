@@ -1,0 +1,19 @@
+node_modules/# Archivos de Docker
+*.log
+*.pid
+.env
+
+# Volúmenes o bases de datos generadas
+mysql/data/
+docker-volumes/
+
+# Configuración de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de entorno
+.env
+
+# Archivos de VSCode u otros editores
+.vscode/
+.idea/
