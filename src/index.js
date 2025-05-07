@@ -8,13 +8,36 @@ const DATA_FILE = './data.json';
 app.use(express.json());
 //app.use(cors());
 
-let notes = [
+/*let notes = [
   { id: 1, title: 'Primera nota', content: '20' },
   { id: 2, title: 'Segunda nota', content: '15' }
 ];
-let nextId = 3;
+let nextId = 3;*/
 
-// GET /notes
+// Cargar notas desde archivo
+let notes = [];
+try {
+  const data = fs.readFileSync(DATA_FILE, 'utf-8');
+  notes = JSON.parse(data);
+} catch (err) {
+  //console.error('No se pudo leer data.json. Iniciando con notas vacías.');
+  console.error('Error al leer el archivo de notas data.json:', err.message);
+  notes = [];
+}
+
+let nextId = notes.length > 0 ? Math.max(...notes.map(n => n.id)) + 1 : 1;
+
+// Guardar notas en el archivo
+function saveNotes() {
+  fs.writeFileSync(DATA_FILE, JSON.stringify(notes, null, 2));
+}
+
+// Ruta raíz
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', message: 'API de Notas funcionando' });
+});
+
+//Obtener todas las notas GET /notes
 app.get('/notes', (req, res) => {
   res.json(notes);
 });
