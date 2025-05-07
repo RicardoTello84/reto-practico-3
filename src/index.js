@@ -1,6 +1,8 @@
 const express = require('express');
 const app = express();
-app.use(express.json());
+const port = process.env.PORT || 3000;
+
+//app.use(express.json());
 
 let notes = [];
 
@@ -19,9 +21,12 @@ app.delete('/notes/:id', (req, res) => {
   res.status(204).end();
 });
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
+if (require.main === module) {
+  app.listen(port, () => console.log(`App corriendo en puerto ${port}`));
+}
+
+/*app.listen(port, () => {
   console.log(`API escuchando en puerto ${port}`);
-});
+});*/
 
 module.exports = app;

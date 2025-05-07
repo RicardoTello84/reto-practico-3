@@ -1,26 +1,2 @@
 # Node modules
 node_modules/
-
-# Logs
-logs/
-*.log
-npm-debug.log*
-
-# Coverage (Jest)
-coverage/
-
-# dotenv environment files
-.env
-
-# Build outputs
-dist/
-
-# Docker
-*.local
-docker-compose.override.yml
-
-# IDEs y sistemas operativos
-.vscode/
-.idea/
-.DS_Store
-Thumbs.db
