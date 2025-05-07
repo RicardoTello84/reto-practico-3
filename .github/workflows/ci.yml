@@ -93,4 +93,4 @@ jobs:
       
       - name: Correr el conte
         run: |
-          docker run -d --name reto-practico-3 -p 3000:3000 ricardotello1984/reto-practico-3:latest
+          docker run -d --name reto-practico-3 -p 3000:3000 ricardotello1984/reto-practico-3:latest          
