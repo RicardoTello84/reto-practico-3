@@ -9,7 +9,7 @@ export default [
       sourceType: 'commonjs',
     },
     plugins: {
-      eslint,      
+      eslint,
     },
     rules: {
       'no-unused-vars': 'warn',

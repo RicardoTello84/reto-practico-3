@@ -75,7 +75,7 @@ jobs:
 
       - name: Construir imagen Docker
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/reto-practico-3:latest .
-        #run: docker build -t ricardotello1984/reto-practico-3 .
+        #run: docker build -t ricardotello1984/reto-practico-3:latest .
 
       - name: Subir imagen a Docker Hub
         run: docker push ${{ secrets.DOCKER_USERNAME }}/reto-practico-3:latest
