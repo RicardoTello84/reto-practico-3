@@ -1,6 +1,7 @@
 //import cors from 'cors';
 
 const express = require('express');
+const fs = require('fs');
 const app = express();
 const port = process.env.PORT || 3000;
 const DATA_FILE = './data.json';
@@ -22,7 +23,7 @@ try {
 } catch (err) {
   //console.error('No se pudo leer data.json. Iniciando con notas vacías.');
   console.error('Error al leer el archivo de notas data.json:', err.message);
-  notes = [];
+  notes = [{ id: 0, title: 'sin nota', content: '0' }];
 }
 
 let nextId = notes.length > 0 ? Math.max(...notes.map(n => n.id)) + 1 : 1;
@@ -50,6 +51,7 @@ app.post('/notes', (req, res) => {
   }
   const note = { id: nextId++, title, content };
   notes.push(note);
+  saveNotes();
   res.status(201).json(note);
 });
 
@@ -61,6 +63,7 @@ app.delete('/notes/:id', (req, res) => {
     return res.status(404).json({ error: 'Note not found' });
   }
   notes.splice(index, 1);
+  saveNotes();
   res.status(204).send();
 });
 
