@@ -21,6 +21,7 @@ app.delete('/notes/:id', (req, res) => {
   res.status(204).end();
 });
 
+//Valida si el puerto esta abierto
 if (require.main === module) {
   app.listen(port, () => console.log(`App corriendo en puerto ${port}`));
 }
