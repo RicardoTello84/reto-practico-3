@@ -1,7 +1,11 @@
-FROM node:18-alpine
+FROM node:alpine
+
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-EXPOSE 3000
-CMD ["node", "src/index.js"]
+
+# Corre los tests durante el build
+RUN npm test
+
+CMD ["npm", "start"]

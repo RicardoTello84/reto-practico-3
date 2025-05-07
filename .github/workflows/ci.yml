@@ -1,31 +1,96 @@
-name: CI
+name: CI/CD con Serveo
 
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches:
+      - main
 
 jobs:
-  build:
+  eslint:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v3
+      - name: Clonar repositorio
+        uses: actions/checkout@v3
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
       - name: Instalar dependencias
         run: npm install
 
       - name: Ejecutar ESLint
-        run: npm run lint
+        run: npx eslint .  # Este paso falla si ESLint encuentra error
+
+  test:
+    needs: eslint  # Este paso depende de que el job 'eslint' pase correctamente
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v3
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Instalar dependencias
+        run: npm install
 
       - name: Ejecutar tests
         run: npm test
 
-      - name: Build de Docker
-        run: docker build -t reto-api-docker-ci .
+  docker-validation:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v3
 
-      - name: Escaneo con Trivy
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Construir imagen Docker
+        run: docker build -t ricardotello1984/reto-practico-3:latest .
+
+      - name: Escanear imagen Docker con Trivy
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: reto-api-docker-ci
+          image-ref: ricardotello1984/reto-practico-3:latest
           format: table
           exit-code: 1
-          ignore-unfixed: true
+          severity: HIGH,CRITICAL
+
+  build-and-deploy:
+    needs: docker-validation  # Este paso depende de que el job 'docker-validation' pase correctamente.
+    runs-on: ubuntu-latest
+    #if: success()
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v3
+
+      - name: Autenticarse en Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Construir imagen Docker
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/reto-practico-3:latest .
+        #run: docker build -t ricardotello1984/reto-practico-3 .
+
+      - name: Subir imagen a Docker Hub
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/reto-practico-3:latest
+        #run: docker push ricardotello1984/reto-practico-3
+
+      - name: Hacer deploy a WSL vía Serveo con contraseña
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          password: ${{ secrets.DEPLOY_PASSWORD }}
+          port: ${{ secrets.DEPLOY_PORT }}
+          script: |
+           docker pull ricardotello1984/reto-practico-3:latest
+      
+      - name: Correr el conte
+        run: |
+          docker run -d --name reto-practico-3 -p 3000:3000 ricardotello1984/reto-practico-3:latest

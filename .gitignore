@@ -1,19 +1,26 @@
-node_modules/# Archivos de Docker
+# Node modules
+node_modules/
+
+# Logs
+logs/
 *.log
-*.pid
+npm-debug.log*
+
+# Coverage (Jest)
+coverage/
+
+# dotenv environment files
 .env
 
-# Volúmenes o bases de datos generadas
-mysql/data/
-docker-volumes/
+# Build outputs
+dist/
 
-# Configuración de sistema
-.DS_Store
-Thumbs.db
+# Docker
+*.local
+docker-compose.override.yml
 
-# Archivos de entorno
-.env
-
-# Archivos de VSCode u otros editores
+# IDEs y sistemas operativos
 .vscode/
 .idea/
+.DS_Store
+Thumbs.db
