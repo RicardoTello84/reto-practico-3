@@ -1,11 +1,11 @@
-import cors from 'cors';
+//import cors from 'cors';
 
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(cors());
+//app.use(cors());
 
 let notes = [];
 let nextId = 1;
