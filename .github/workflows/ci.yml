@@ -32,7 +32,7 @@ jobs:
         run: npx jest --coverage
 
       - name: Guardar cobertura como artefacto
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: coverage-report
           path: coverage/
@@ -69,7 +69,7 @@ jobs:
           ./trivy image --severity HIGH,CRITICAL --exit-code 1 --format json --output trivy-report.json ${{ secrets.DOCKER_USERNAME }}/reto-practico-3:latest
 
       - name: Subir artefacto de seguridad
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: trivy-security-report
           path: trivy-report.json
