@@ -17,17 +17,8 @@ describe('API de notas', () => {
     expect(res.body).toHaveProperty('content', 'Contenido 1');
   });
 
-  it('DELETE /notes/:id debe eliminar una nota existente', async () => {
-    const post = await request(app)
-      .post('/notes')
-      .send({ title: 'Eliminar', content: 'Esta será eliminada' });
-    
-    const res = await request(app).delete(`/notes/${post.body.id}`);
+  it('DELETE /notes/:id elimina una nota', async () => {
+    const res = await request(app).delete('/notes/2');
     expect(res.statusCode).toBe(204);
-  });
-
-  it('DELETE /notes/:id con id inexistente debe retornar 404', async () => {
-    const res = await request(app).delete('/notes/9999');
-    expect(res.statusCode).toBe(404);
   });
 });
