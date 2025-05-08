@@ -4,84 +4,103 @@ on:
   push:
     branches:
       - main
+  pull_request:
 
 jobs:
   eslint:
     runs-on: ubuntu-latest
     steps:
-      - name: Clonar repositorio
-        uses: actions/checkout@v3
-
-      - name: Instalar Node.js
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          node-version: '18'
-
-      - name: Instalar dependencias
-        run: npm install
-
+          node-version: 18
+      - run: npm ci
       - name: Ejecutar ESLint
-        run: npx eslint .  # Este paso falla si ESLint encuentra error
+        run: npx eslint .
 
   test:
-    needs: eslint  # Este paso depende de que el job 'eslint' pase correctamente
+    needs: eslint
     runs-on: ubuntu-latest
     steps:
-      - name: Clonar repositorio
-        uses: actions/checkout@v3
-
-      - name: Instalar Node.js
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: 18
+      - run: npm ci
 
-      - name: Instalar dependencias
-        run: npm install
+      - name: Ejecutar tests con cobertura
+        run: npx jest --coverage
 
-      - name: Ejecutar tests
-        run: npm test
+      - name: Guardar cobertura como artefacto
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage/
+
+      - name: Generar resumen para PR
+        if: github.event_name == 'pull_request'
+        run: npx jest --coverage --coverageReporters=text-summary > coverage-summary.txt
+
+      - name: Comentar cobertura en PR
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          path: coverage-summary.txt
 
   docker-validation:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - name: Clonar repositorio
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v3
+      - name: Instalar jq
+        run: sudo apt-get install -y jq
+
+      - uses: docker/setup-buildx-action@v3
 
       - name: Construir imagen Docker
-        run: docker build -t ricardotello1984/reto-practico-3:latest .
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/reto-practico-3:latest .
 
-      - name: Escanear imagen Docker con Trivy
-        uses: aquasecurity/trivy-action@master
+      - name: Instalar Trivy
+        run: curl -sSL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
+
+      - name: Ejecutar escaneo de seguridad (Trivy)
+        run: |
+          ./trivy image --severity HIGH,CRITICAL --exit-code 1 --format json --output trivy-report.json ${{ secrets.DOCKER_USERNAME }}/reto-practico-3:latest
+
+      - name: Subir artefacto de seguridad
+        uses: actions/upload-artifact@v3
         with:
-          image-ref: ricardotello1984/reto-practico-3:latest
-          format: table
-          exit-code: 1
-          severity: HIGH,CRITICAL
+          name: trivy-security-report
+          path: trivy-report.json
+
+      - name: Generar resumen Trivy para PR
+        if: github.event_name == 'pull_request'
+        run: |
+          cat trivy-report.json | jq '.Results[]?.Vulnerabilities? // [] | map("* \(.VulnerabilityID) [\(.PkgName)] - \(.Severity): \(.Title)") | join("\n")' -r > trivy-summary.txt
+          echo -e "\n_⚠️ Vulnerabilidades encontradas por Trivy (HIGH/CRITICAL)._ Revisa antes de hacer merge.\n" >> trivy-summary.txt
+
+      - name: Comentar vulnerabilidades en PR
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          path: trivy-summary.txt
 
   build-and-deploy:
-    needs: docker-validation  # Este paso depende de que el job 'docker-validation' pase correctamente.
+    needs: docker-validation
     runs-on: ubuntu-latest
-    #if: success()
     steps:
-      - name: Clonar repositorio
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Autenticarse en Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Construir imagen Docker
-        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/reto-practico-3:latest .
-        #run: docker build -t ricardotello1984/reto-practico-3:latest .
+      - name: Construir y subir imagen
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/reto-practico-3:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/reto-practico-3:latest
 
-      - name: Subir imagen a Docker Hub
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/reto-practico-3:latest
-        #run: docker push ricardotello1984/reto-practico-3:latest
-
-      - name: Hacer deploy a WSL vía Serveo con contraseña
+      - name: Hacer deploy vía Serveo
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.DEPLOY_HOST }}
@@ -89,8 +108,6 @@ jobs:
           password: ${{ secrets.DEPLOY_PASSWORD }}
           port: ${{ secrets.DEPLOY_PORT }}
           script: |
-           docker pull ricardotello1984/reto-practico-3:latest
-      
-      - name: Correr el conte
-        run: |
-          docker run -d --name reto-practico-3 -p 3000:3000 ricardotello1984/reto-practico-3:latest          
+            docker pull ${{ secrets.DOCKER_USERNAME }}/reto-practico-3:latest
+            docker rm -f reto-practico-3 || true
+            docker run -d --name reto-practico-3 -p 3000:3000 ${{ secrets.DOCKER_USERNAME }}/reto-practico-3:latest
