@@ -58,12 +58,17 @@ app.post('/notes', (req, res) => {
 // DELETE /notes/:id
 app.delete('/notes/:id', (req, res) => {
   const id = parseInt(req.params.id);
+  console.log('Intentando eliminar nota con ID:', id);
+  console.log('Notas actuales:', notes);
+
   const index = notes.findIndex(note => note.id === id);
   if (index === -1) {
+    console.log('Nota no encontrada');
     return res.status(404).json({ error: 'Note not found' });
   }
   notes.splice(index, 1);
   saveNotes();
+  console.log('Nota eliminada. Notas restantes:', notes);
   res.status(204).send();
 });
 
