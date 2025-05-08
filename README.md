@@ -1,3 +1,5 @@
+[![CI/CD con Serveo](https://github.com/RicardoTello84/reto-practico-3/actions/workflows/ci.yml/badge.svg)](https://github.com/RicardoTello84/reto-practico-3/actions/workflows/ci.yml)
+
 # Reto API Docker CI/CD
 
 API sencilla de notas, contenerizada con Docker, validada con ESLint y Jest, escaneada con Trivy, y automatizada con GitHub Actions.
