@@ -58,9 +58,14 @@ jobs:
       - name: Instalar Trivy
         run: curl -sSL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
 
+      - name: Verificar instalación de Trivy
+        run: |
+          which trivy
+          trivy --version
+
       - name: Ejecutar escaneo de seguridad (Trivy)
         run: |
-          ./trivy image --severity HIGH,CRITICAL --exit-code 1 --format json --output trivy-report.json ${{ secrets.DOCKER_USERNAME }}/reto-practico-3:latest
+          /usr/local/bin/trivy image --severity HIGH,CRITICAL --exit-code 1 --format json --output trivy-report.json ${{ secrets.DOCKER_USERNAME }}/reto-practico-3:latest
      
       - name: Generar resumen Trivy para PR
         if: github.event_name == 'pull_request'
