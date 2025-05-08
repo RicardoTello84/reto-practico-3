@@ -61,13 +61,7 @@ jobs:
       - name: Ejecutar escaneo de seguridad (Trivy)
         run: |
           ./trivy image --severity HIGH,CRITICAL --exit-code 1 --format json --output trivy-report.json ${{ secrets.DOCKER_USERNAME }}/reto-practico-3:latest
-
-      - name: Subir artefacto de seguridad
-        uses: actions/upload-artifact@v3
-        with:
-          name: trivy-security-report
-          path: trivy-report.json
-
+     
       - name: Generar resumen Trivy para PR
         if: github.event_name == 'pull_request'
         run: |
