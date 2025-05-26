@@ -2,7 +2,7 @@
 
 # Reto API Docker CI/CD
 
-API sencilla de notas, contenerizada con Docker, validada con ESLint y Jest, escaneada con Trivy, y automatizada con GitHub Actions.
+API de notas, contenerizada con Docker, validada con ESLint y Jest, escaneada con Trivy, y automatizada con GitHub Actions.
 
 ## Uso
 ```bash
